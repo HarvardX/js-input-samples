@@ -3,7 +3,7 @@
 This repository originally comes from Stanford University, and is now maintained by Harvard. It holds problem types for edX, for use as [Custom JavaScript Display and Grading](https://edx.readthedocs.io/projects/edx-partner-course-staff/en/latest/exercises_tools/custom_javascript.html) problems. 
 
 ## Projects ##
-- "[Accessible Matching](https://github.com/HarvardX/js-input-samples/tree/master/matching_accessible)": A standard matching-type problem as seen in a myriad of classroom quizzes. Designed to be usable on screen readers as well as by sighted users.
+- "[Matching v3](https://github.com/HarvardX/js-input-samples/tree/master/matching_v3): An improved version of the Accessible Matching problem below that's easier to implement and has better accessibility.
 - "[Card Sorting](https://github.com/HarvardX/js-input-samples/tree/master/cardsorting)": A card-sorting exercise. Used to in cognitive science to measure expertise in a particular field.
 - "[Celluar Automata](https://github.com/HarvardX/js-input-samples/tree/master/automata)": Full-featured JS Input project demonstrating a cellular automata problem.
 - "[Drop File](https://github.com/HarvardX/js-input-samples/tree/master/dropfile)": A bare-bones problem that uses Javascript to check a file and see whether it's an image or text. Constructed as an example of how someone might create a file-processing problem.
@@ -20,4 +20,5 @@ This repository originally comes from Stanford University, and is now maintained
 
 ## Deprecated Projects ##
 - "[Matching](https://github.com/HarvardX/js-input-samples/tree/master/deprecated/matching)": A standard matching-type problem as seen in a myriad of classroom quizzes. Replaced by the [Accessible Matching](https://github.com/HarvardX/js-input-samples/tree/master/matching_accessible) problem.
-- "[Adaptive MC](https://github.com/HarvardX/js-input-samples/tree/master/adaptive_mc)": Creates a set of resources where the path depends on a student's answers to MC questions. Still under construction.
+- "[Adaptive MC](https://github.com/HarvardX/js-input-samples/tree/master/adaptive_mc)": Creates a set of resources where the path depends on a student's answers to MC questions. Never left the construction stage.
+- "[Accessible Matching](https://github.com/HarvardX/js-input-samples/tree/master/matching_accessible)": A standard matching-type problem as seen in a myriad of classroom quizzes. Designed to be usable on screen readers as well as by sighted users.
