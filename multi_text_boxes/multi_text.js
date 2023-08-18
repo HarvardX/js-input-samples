@@ -21,22 +21,22 @@ var multi_text = (function () {
   if (window.parent !== window) {
     channel = Channel.build({
       window: window.parent,
-      origin: '*',
-      scope: 'JSInput',
+      origin: "*",
+      scope: "JSInput",
     });
-    channel.bind('getGrade', getGrade);
-    channel.bind('getState', getState);
-    channel.bind('setState', setState);
+    channel.bind("getGrade", getGrade);
+    channel.bind("getState", getState);
+    channel.bind("setState", setState);
   }
 
   // Called by edX to obtain the current learner state for this problem.
   function getState() {
-    console.log('getting state');
+    console.log("getting state");
     // Get what the learner typed.
     let d = window.parent.document;
-    d.querySelectorAll('.multianswer').forEach(function (e, i) {
+    d.querySelectorAll(".multianswer").forEach(function (e, i) {
       // This string gets URI-decoded later, so percents need to be escaped.
-      JSProblemState.answers[i] = e.value.replace(/%/g, '%25');
+      JSProblemState.answers[i] = e.value.replace(/%/g, "%25");
       console.log(e.value);
     });
     // Give edX our state as a string.
@@ -45,14 +45,14 @@ var multi_text = (function () {
 
   // Called by edX to set the live learner state to what's recorded on the server.
   function setState() {
-    console.log('setting state');
+    console.log("setting state");
     // Make sure we're getting the right thing from edX.
     stateStr = arguments.length === 1 ? arguments[0] : arguments[1];
     // edX stores the state as stringified JSON. Parse it.
     JSProblemState = JSON.parse(stateStr);
     // Set the live state to the stored state (the learner's previous answer).
     let d = window.parent.document;
-    d.querySelectorAll('.multianswer').forEach(function (e, i) {
+    d.querySelectorAll(".multianswer").forEach(function (e, i) {
       e.value = JSProblemState.answers[i];
       console.log(e.value);
     });
@@ -60,12 +60,12 @@ var multi_text = (function () {
 
   // Called by edX when the learner submits the problem.
   function getGrade() {
-    console.log('getting grade');
+    console.log("getting grade");
     // Get what the learner typed.
     let d = window.parent.document;
-    d.querySelectorAll('.multianswer').forEach(function (e, i) {
+    d.querySelectorAll(".multianswer").forEach(function (e, i) {
       // The answer string gets URI-decoded later, so percents need to be escaped.
-      JSProblemState.answers[i] = e.value.replace(/%/g, '%25');
+      JSProblemState.answers[i] = e.value.replace(/%/g, "%25");
       console.log(e.value);
     });
     // This calls the logging code from the XML file.
@@ -85,4 +85,4 @@ var multi_text = (function () {
 })();
 
 // Just letting us know that the iframe is working.
-console.log('inner ready');
+console.log("inner ready");
