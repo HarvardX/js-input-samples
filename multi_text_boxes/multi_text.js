@@ -35,13 +35,9 @@ var multi_text = (function () {
     // Get what the learner typed.
     let d = window.parent.document;
     d.querySelectorAll('.multianswer').forEach(function (e, i) {
+      // This string gets URI-decoded later, so percents need to be escaped.
+      JSProblemState.answers[i] = e.value.replace(/%/g, '%25');
       console.log(e.value);
-      JSProblemState.answers[i] = e.value;
-    });
-
-    // This string gets URI-decoded later, so percents need to be escaped.
-    JSProblemState.answers.forEach(function (e, i) {
-      e = e.replace(/%/g, '%25');
     });
     // Give edX our state as a string.
     return JSON.stringify(JSProblemState);
@@ -68,15 +64,12 @@ var multi_text = (function () {
     // Get what the learner typed.
     let d = window.parent.document;
     d.querySelectorAll('.multianswer').forEach(function (e, i) {
+      // The answer string gets URI-decoded later, so percents need to be escaped.
+      JSProblemState.answers[i] = e.value.replace(/%/g, '%25');
       console.log(e.value);
-      JSProblemState.answers[i] = e.value;
     });
     // This calls the logging code from the XML file.
     parent.logThatThing(JSProblemState);
-    // The answer string gets URI-decoded later, so percents need to be escaped.
-    JSProblemState.answers.forEach(function (e, i) {
-      e = e.replace(/%/g, '%25');
-    });
 
     // Send the problem state to be graded.
     return JSON.stringify(JSProblemState);
