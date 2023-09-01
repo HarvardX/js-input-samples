@@ -11,6 +11,7 @@ This repository originally comes from Stanford University, and is now maintained
 - "[Learner Backpack](https://github.com/HarvardX/js-input-samples/tree/master/learner_backpack)": Creates storage for student-associated data in edX. Meant to be used with [HX-JS](https://github.com/Colin-Fredericks/hx-js), but adaptable for other purposes.
 - "[Mirror](https://github.com/HarvardX/js-input-samples/tree/master/mirror)": Simple 'Hello World' project that works well as a barebones starter.
 - "[Mufi Text Editor](https://github.com/HarvardX/js-input-samples/tree/master/mufi_text_editor)": Simple, lightweight rich text editor. Grades on participation.
+- "[Multi Text Boxes](https://github.com/HarvardX/js-input-samples/tree/master/multi_text_boxes)": Allows several plaintext boxes to be placed anywhere on the page. Graded on participation.
 - "[Piano](https://github.com/HarvardX/js-input-samples/tree/master/piano)": More complicated project that demonstrates more advanced use of JS Input
 - "[Qualtrics Grader](https://github.com/HarvardX/js-input-samples/tree/master/qualtrics_grader)": Allows grading of Qualtrics surveys based on percent completion.
 - "[Range Guesser](https://github.com/HarvardX/js-input-samples/tree/master/range_guesser)": Allows students to guess at a number (or time) by setting a range. Closer guess = more credit.
