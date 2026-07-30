@@ -13,12 +13,14 @@ This problem compares submitted files to a particular set of files in the `/stat
 - Turn partial credit on or off in the `options` variable. If partial credit is off, only 100% correctness receives credit.
 - If we're using hashes, the score returned is the percentage of files whose hashes match exactly.
 - If we're using files, each file can get partial credit. Perfect matches give full credit, but if things differ in the ways listed below, partial credit can be obtained. Partial credit values are multiplied together to get the final score.
-  - `spaces` is applied if whitespace at beginning and end of lines does not match.
-  - `crlf` is applied if there are extra blank lines.
+  - `blank_lines` is applied if there are extra blank lines.
   - `case` is applied if things match only once case is squished.
+  - `encoding` is applied if the file is in `utf-8` when it should be in `ansi` or vice versa. Those are the only two encodings we accept.
+  - `spaces` is applied if whitespace at beginning and end of lines does not match.
   - To make one of these *required*, set it to 0 so that it will zero out the score on its own. To *ignore* it, set it to 1 so that missing that item doesn't alter the score.
   - Scores below the `low_cutoff` are rounded down to 0%.
   - Scores above the `high_cutoff` are rounded up to 100%.
+  - Minimum score is `participation points`.
 
 ## Creating Your Own File Comparison Problems
 

@@ -16,11 +16,13 @@ def answercheck(e, ans):
     "entries": entries,
     "files_or_hashes": "files",   # alternative: "hashes"
     "credit_options": {
-      "spaces": 0.9,
-      "crlf": 0.8,
+      "blank_lines": 0.8,
       "case": 0.6,
+      "encoding": 1,
+      "spaces": 0.9,
       "low_cutoff": 0.5,
-      "high_cutoff": 0.9
+      "high_cutoff": 0.9,
+      "participation_points": 0.2,
     }
   }
 
