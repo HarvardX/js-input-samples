@@ -1,0 +1,68 @@
+<problem>
+<script type="loncapa/python">
+<![CDATA[
+
+from python_lib import HXGraders
+
+def answercheck(e, ans):
+
+  entries = [
+    "hash_or_filename_1",
+    "hash_or_filename_2",
+    "hash_or_filename_3",
+  ]
+
+  options = {
+    "entries": entries,
+    "files_or_hashes": "files",   # alternative: "hashes"
+    "credit_options": {
+      "spaces": 0.9,
+      "crlf": 0.8,
+      "case": 0.6,
+      "low_cutoff": 0.5,
+      "high_cutoff": 0.9
+    }
+  }
+
+  # This pulls from the python_lib.zip file in Files & Uploads.
+  return HXGraders.fileComparisonGrader(ans, options)
+
+]]>
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+  console.log('outer ready');
+});
+
+function logThatThing(ThatThing){
+  console.log(JSON.stringify(ThatThing));
+  // Call the edX logging code.
+  Logger.log("harvardx.StudioAdv.file_comparison", ThatThing);
+}
+</script>
+
+  <p>Put your prompt here</p>
+
+  <!-- This will get turned into a rich text editor by hx-js. -->
+  <!-- Change the ID here and above if you have multiple on the same screen. -->
+
+  <customresponse cfn="answercheck">
+    <jsinput
+      title="File Comparison Exercise"
+      gradefn="file_comparison.getGrade"
+      get_statefn="file_comparison.getState"
+      set_statefn="file_comparison.setState"
+      width="100%"
+      height="100px"
+      html_file="/static/file_comparison.html"
+      sop="false"/>
+  </customresponse>
+  <solution>
+    <div class="detailed-solution">
+      <p>Explanation</p>
+      <p>You can put commentary here if you want, or you can remove this.</p>
+    </div>
+  </solution>
+
+</problem>
