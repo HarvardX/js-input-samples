@@ -164,10 +164,31 @@ async function processFiles(all_file_content, options) {
 		else {
 			// Yay it's a text file!
 			displayFileInfo(f);
-			// console.log(`Content: ${all_file_content[f.name].content}`);
+
+			// Go get the file to compare to.
+			let correct_file_content = await retrieveFile(f.name);
+			// console.log('Correct file content:');
+			// console.log(correct_file_content);
+			let submitted_file_content = f.content;
+			let correct_by_line = correct_file_content.split('\n');
+			let submitted_by_line = submitted_file_content.split('\n');
+
+			// Compare the two files line by line.
+			let all_lines_match = true;
+			for (let i = 0; i < correct_by_line.length; i++) {
+				console.log('Comparing line ' + (i + 1) + ':' +
+					(correct_by_line[i] === submitted_by_line[i] ? ' MATCH' : ' MISMATCH')
+				);
+				if (correct_by_line[i] !== submitted_by_line[i]) {
+					console.log('Line ' + (i + 1) + ' mismatch:');
+					console.log('Expected: ' + correct_by_line[i]);
+					console.log('Received: ' + submitted_by_line[i]);
+					all_lines_match = false;
+					break;
+				}
+			}
 		}
 	}
-
 }
 
 
@@ -192,6 +213,11 @@ function displayFileInfo(file_info) {
 	info_area.innerHTML += info_html;
 }
 
+/** Loads the file from the same folder this script is in. */
+async function retrieveFile(fileName) {
+	const file_content = await fetch(fileName).then(response => response.text());
+	return file_content;
+}
 
 /**
  * Hashes text to SHA256 for the purpose of comparing answers without revealing the answer itself.
