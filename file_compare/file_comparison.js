@@ -11,9 +11,6 @@ function init() {
 
 	// Create a file-drop area for processing.
 	const fileDropArea = document.getElementById('file-drop-area');
-	fileDropArea.className = 'drop-area';
-	fileDropArea.innerHTML = 'Drop files here';
-	document.body.appendChild(fileDropArea);
 
 	// Add event listeners for drag and drop functionality.
 	fileDropArea.addEventListener('dragover', (event) => {
@@ -97,63 +94,41 @@ var file_comparison = (function () {
 
 /** Just here for now; will be replacing with something more extensive. */
 function handleFiles(files) {
-	for (const file of files) {
+	for (const f of files) {
 		const reader = new FileReader();
 		reader.onload = (event) => {
-			const fileContent = event.target.result;
-			console.log(`File: ${file.name}, Content: ${fileContent}`);
-			// Here you can add code to process the file content as needed.
+			const file_content = event.target.result;
+			processFile(f, file_content);
 		};
-		reader.readAsText(file);
+		reader.readAsText(f);
 	}
 }
 
 /**
  * 
- * @param {*} file 
- * @param {*} outputArea 
- * @param {*} infoArea 
+ * @param {*} file_content
  */
-function processFile(file, outputArea, infoArea) {
-
-	JSProblemState.uploadedRightThing = true;
+function processFile(file, file_content) {
+	let info_area = document.getElementById('info-area');
 
 	// Give us the basics about the file.
-	infoArea.append('<p>Filename: ' + file.name + '</p>');
-	infoArea.append('<p>Type: ' + file.type + '</p>');
-	infoArea.append('<p>Size: ' + file.size + ' bytes</p>');
+	let info_html = '<p>Name: ' + file.name + '</p>';
+	info_html += '<p>Type: ' + file.type + '</p>';
+	info_html += '<p>Size: ' + file.size + ' bytes</p>';
+	info_area.innerHTML = info_html;
 
-	if (file.type.indexOf('image') > -1) {
 
-		// Display a small preview of the image. Using Data URI approach to load.
-
-		var imageData = new FileReader();
-		imageData.onload = function (event) {
-			var dataUri = event.target.result,
-				img = document.createElement('img');
-
-			img.src = dataUri;
-			outputArea.append(img);
-		};
-
-		imageData.onerror = function (event) {
-			console.error('File could not be read! Code ' + event.target.error.code);
-			JSProblemState.uploadedRightThing = false;
-		};
-
-		imageData.readAsDataURL(file);
-
-		JSProblemState
-
-	} else if (file.type.indexOf('text') > -1) {
+	if (file.type.indexOf('text') > -1) {
+		console.log(`Content: ${file_content}`);
 
 		// Show the full content as preformatted text.
 
 		var textData = new FileReader();
+		const outputArea = document.querySelector("#output-area");
 		textData.onload = function (event) {
 			var rawText = event.target.result;
-			outputArea.append('<pre></pre>');
-			$('pre:last-child').text(rawText).html();
+			outputArea.innerHTML += '<pre></pre>';
+			outputArea.querySelector('pre:last-child').textContent = rawText;
 		};
 
 		textData.onerror = function (event) {
@@ -166,7 +141,9 @@ function processFile(file, outputArea, infoArea) {
 	} else {
 
 		// This is not what we asked for.
-		outputArea.append('<p>That is not an image or text file.');
+		let outputArea = document.querySelector("#output-area");
+
+		outputArea.innerHTML += '<p>That is not a text file.</p>';
 		JSProblemState.uploadedRightThing = false;
 
 	}
