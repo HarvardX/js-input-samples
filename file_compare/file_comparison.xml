@@ -6,23 +6,24 @@ from python_lib import HXGraders
 
 def answercheck(e, ans):
 
-  entries = [
+  correct_answers = [
     "hash_or_filename_1",
     "hash_or_filename_2",
-    "hash_or_filename_3",
+    "hash_or_filename_3"
   ]
 
   must_have = [
     "code_thing_1",
-    "code_thing_2",
+    "code_thing_2"
   ]
 
   cannot_have = [
     "code_thing_3",
-    "code_thing_4",
+    "code_thing_4"
   ]
 
   options = {
+    "correct_answers": correct_answers,
     "must_have": must_have,
     "cannot_have": cannot_have,
     "files_or_hashes": "files",   # alternative: "hashes"
@@ -33,12 +34,12 @@ def answercheck(e, ans):
       "spaces": 0.9,
       "low_cutoff": 0.5,
       "high_cutoff": 0.9,
-      "participation_points": 0.2,
+      "participation_points": 0.2
     }
   }
 
   # This pulls from the python_lib.zip file in Files & Uploads.
-  return HXGraders.fileComparisonGrader(ans, entries, options)
+  return HXGraders.fileComparisonGrader(ans, correct_answers, options)
 
 ]]>
 </script>
@@ -72,7 +73,7 @@ function logThatThing(ThatThing){
       sop="false"/>
   </customresponse>
   <!-- Quietly stores options on the page so javascript can read them. -->
-  <div style="width:1px; height:1px; overflow:hidden;" aria-hidden="true">
+  <div class="hx-comparison-options" style="width:1px; height:1px; overflow:hidden;" aria-hidden="true">
     $options
   </div>
   <solution>

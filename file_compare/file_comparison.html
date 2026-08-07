@@ -14,6 +14,7 @@
     .drop-area {
       width: 50%;
       height: 150px;
+      font-size: 1.125rem;
 
       margin: 20px;
       border: 2px solid #ccc;
@@ -33,9 +34,26 @@
 </head>
 
 <body>
-  <div id="file-drop-area" class="drop-area">
-    Drop files here
+  <div class="hx-comparison-options">
+  {
+    "correct_answers": ["entry1.txt", "entry2.txt"],
+    "must_have": [],
+    "cannot_have": [],
+    "files_or_hashes": "files",
+    "credit_options": {
+      "blank_lines": 0.8,
+      "case": 0.6,
+      "encoding": 1,
+      "spaces": 0.9,
+      "low_cutoff": 0.5,
+      "high_cutoff": 0.9,
+      "participation_points": 0.2
+    }
+  }
   </div>
+  <button id="file-drop-area" class="drop-area">
+    Drop files here or click to select files
+  </button>
   <div id="info-area"></div>
   <div id="output-area"></div>
 </body>

@@ -11,6 +11,7 @@ function init() {
 
 	// Create a file-drop area for processing.
 	const fileDropArea = document.getElementById('file-drop-area');
+	const options = getOptions();
 
 	// Add event listeners for drag and drop functionality.
 	fileDropArea.addEventListener('dragover', (event) => {
@@ -27,7 +28,20 @@ function init() {
 		event.preventDefault();
 		fileDropArea.classList.remove('dragover');
 		const files = event.dataTransfer.files;
-		handleFiles(files);
+		readFiles(files, options);
+	});
+
+	// Let people click on the area to open a file dialog 
+	// in case they can't drag.
+	fileDropArea.addEventListener('click', () => {
+		const fileInput = document.createElement('input');
+		fileInput.type = 'file';
+		fileInput.multiple = true; // Allow multiple files to be selected.
+		fileInput.addEventListener('change', (event) => {
+			const files = event.target.files;
+			readFiles(files, options);
+		});
+		fileInput.click();
 	});
 
 }
@@ -92,62 +106,90 @@ var file_comparison = (function () {
 
 }());
 
-/** Just here for now; will be replacing with something more extensive. */
-function handleFiles(files) {
+
+/** 
+ * Reads in the learner files and returns most of the info as an object.
+ * 
+ * @param {FileList} files - The list of files uploaded by the learner.
+ * @param {Object} options - The options for the file comparison, as defined in the XML.
+ * 
+ * @returns {Promise<Object>} An object containing the file information.
+ */
+async function readFiles(files, options) {
+	let all_file_content = {};
 	for (const f of files) {
 		const reader = new FileReader();
-		reader.onload = (event) => {
-			const file_content = event.target.result;
-			processFile(f, file_content);
-		};
-		reader.readAsText(f);
+		await new Promise((resolve, reject) => {
+			reader.onload = (event) => {
+				const file_content = event.target.result;
+				console.log(f);
+				all_file_content[f.name] = {
+					"content": file_content,
+					"size": f.size,
+					"type": f.type
+				};
+				resolve();
+			};
+			reader.onerror = (event) => {
+				reject(event.target.error);
+			};
+			reader.readAsText(f);
+		});
 	}
+	await processFiles(all_file_content, options);
 }
 
 /**
- * 
- * @param {*} file_content
+ * Compares file content uploaded by learners to the correct answers.
+ * @param {*} all_file_content
  */
-function processFile(file, file_content) {
-	let info_area = document.getElementById('info-area');
+async function processFiles(all_file_content, options) {
+	for (const fileName in all_file_content) {
+		const f = all_file_content[fileName];
+		f.name = fileName;
 
-	// Give us the basics about the file.
-	let info_html = '<p>Name: ' + file.name + '</p>';
-	info_html += '<p>Type: ' + file.type + '</p>';
-	info_html += '<p>Size: ' + file.size + ' bytes</p>';
-	info_area.innerHTML = info_html;
-
-
-	if (file.type.indexOf('text') > -1) {
-		console.log(`Content: ${file_content}`);
-
-		// Show the full content as preformatted text.
-
-		var textData = new FileReader();
-		const outputArea = document.querySelector("#output-area");
-		textData.onload = function (event) {
-			var rawText = event.target.result;
-			outputArea.innerHTML += '<pre></pre>';
-			outputArea.querySelector('pre:last-child').textContent = rawText;
-		};
-
-		textData.onerror = function (event) {
-			console.error('File could not be read! Code ' + event.target.error.code);
+		if (
+			f.type.indexOf('text') === -1 &&
+			f.type.indexOf('json') === -1 &&
+			f.type.indexOf('javascript') === -1 &&
+			f.type.indexOf('python') === -1
+		) {
+			// This is not a text file.
+			let outputArea = document.querySelector("#output-area");
+			outputArea.innerHTML += '<p>' + f.name + ' is not a text file.</p>';
 			JSProblemState.uploadedRightThing = false;
-		};
-
-		textData.readAsText(file);
-
-	} else {
-
-		// This is not what we asked for.
-		let outputArea = document.querySelector("#output-area");
-
-		outputArea.innerHTML += '<p>That is not a text file.</p>';
-		JSProblemState.uploadedRightThing = false;
-
+			console.log(f.name);
+			console.log(f.type);
+		}
+		else {
+			// Yay it's a text file!
+			displayFileInfo(f);
+			// console.log(`Content: ${all_file_content[f.name].content}`);
+		}
 	}
 
+}
+
+
+/** 
+ * Pulls options from the HTML on the page.
+ * These are declared in Python on edX and inserted into the HTML.
+ */
+function getOptions() {
+	let options_div = document.querySelector('.hx-comparison-options');
+	let options = JSON.parse(options_div.textContent.trim());
+	console.log(options);
+	return options;
+}
+
+/** Puts basic info about the uploaded file into the info area. */
+function displayFileInfo(file_info) {
+	let info_area = document.getElementById('info-area');
+
+	let info_html = '<p>Name: ' + file_info.name + '</p>';
+	info_html += '<p>Type: ' + file_info.type + '</p>';
+	info_html += '<p>Size: ' + file_info.size + ' bytes</p>';
+	info_area.innerHTML += info_html;
 }
 
 
