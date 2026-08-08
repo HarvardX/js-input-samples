@@ -173,18 +173,65 @@ async function processFiles(all_file_content, options) {
 			let correct_by_line = correct_file_content.split('\n');
 			let submitted_by_line = submitted_file_content.split('\n');
 
+
+			// "credit_options": {
+			//   "blank_lines": 0.8,
+			//   "case": 0.6,
+			//   "spaces": 0.9,
+			//   "low_cutoff": 0.5,
+			//   "high_cutoff": 0.9,
+			//   "participation_points": 0.2
+			// }
+
+			let apply_partial_credit = {
+				"blank_lines": false,
+				"case": false,
+				"spaces": false
+			}
+
 			// Compare the two files line by line.
-			let all_lines_match = true;
+			let total_credit = 1;
+			let offset = 0;
 			for (let i = 0; i < correct_by_line.length; i++) {
-				console.log('Comparing line ' + (i + 1) + ':' +
-					(correct_by_line[i] === submitted_by_line[i] ? ' MATCH' : ' MISMATCH')
-				);
-				if (correct_by_line[i] !== submitted_by_line[i]) {
-					console.log('Line ' + (i + 1) + ' mismatch:');
-					console.log('Expected: ' + correct_by_line[i]);
-					console.log('Received: ' + submitted_by_line[i]);
-					all_lines_match = false;
+				console.log('Comparing line ' + (i + 1));
+				if (i + offset >= submitted_by_line.length) {
+					console.log('Ran out of lines in submitted file.');
 					break;
+				}
+				if (correct_by_line[i] === submitted_by_line[i + offset]) {
+					// Perfect match, everything's great.
+					console.log('Perfect match on line ' + (i + 1));
+					continue;
+				} else {
+					// Imperfect match, check for partial credit.
+					let cl = correct_by_line[i].trim();
+					let sl = submitted_by_line[i + offset].trim();
+					if (cl !== sl) {
+						if (cl.toLowerCase() === sl.toLowerCase()) {
+							console.log("Line " + (i + 1) + " is the same except for case.");
+							apply_partial_credit.case = true;
+						} else {
+							console.log("Line " + (i + 1) + " is entirely different. Done comparing.");
+							total_credit = 0;
+							break;
+						}
+					} else {
+						console.log("Line " + i + "matches except for whitespace at either end.");
+						apply_partial_credit.spaces = true;
+						if (correct_by_line[i] === "" && submitted_by_line[i + offset] !== "") {
+							// The correct file has a blank line, but the submitted file does not.
+							// Hold back our count on the submitted file by one line.
+							console.log("Holding back one line at " + (i + 1) + " in the submitted file because the correct file has a blank line.");
+							apply_partial_credit.blank_lines = true;
+							offset--;
+						} else if (correct_by_line[i] !== "" && submitted_by_line[i + offset] === "") {
+							// The submitted file has a blank line, but the correct file does not.
+							// Move forward the line we're examining in the submitted file by one line.
+							console.log("Moving forward one line at " + (i + 1) + " in the submitted file because the submitted file has a blank line.");
+							apply_partial_credit.blank_lines = true;
+							offset++;
+						}
+					}
 				}
 			}
 		}
