@@ -137,12 +137,12 @@ async function readFiles(files, options) {
 			reader.readAsText(f);
 		});
 	}
-  // console.log(all_file_content);
-  if (Object.keys(all_file_content).length !== options.correct_answers.length) {
-    console.error("Did not upload all files.");
-  } else{
-    await compareFiles(all_file_content, options);
-  }
+	// console.log(all_file_content);
+	if (Object.keys(all_file_content).length !== options.correct_answers.length) {
+		console.error("Did not upload all files.");
+	} else {
+		await compareFiles(all_file_content, options);
+	}
 }
 
 /**
@@ -154,10 +154,19 @@ async function readFiles(files, options) {
 async function compareFiles(all_file_content, options) {
 	let max_credit = Object.keys(all_file_content).length;
 	let current_credit = 0;
-  for (const fileName in all_file_content) {
+	let missing_required_word = options.must_have.map(word => true); // Start with all required words missing
+
+
+	for (const fileName in all_file_content) {
 		const f = all_file_content[fileName];
 		f.name = fileName;
 		let this_file_credit = 1;
+		let apply_partial_credit = {
+			"blank_lines": false,
+			"case": false,
+			"spaces": false
+		};
+
 
 		if (
 			f.type.indexOf('text') === -1 &&
@@ -193,13 +202,6 @@ async function compareFiles(all_file_content, options) {
 				}
 			}
 
-			// console.log('Correct file content:');
-			// console.log(correct_file_content);
-			let submitted_file_content = f.content;
-			let correct_by_line = correct_file_content.split('\n');
-			let submitted_by_line = submitted_file_content.split('\n');
-
-
 			// Keys for the `credit_options` object. All are Numbers.
 			//   blank_lines
 			//   case
@@ -208,23 +210,42 @@ async function compareFiles(all_file_content, options) {
 			//   high_cutoff
 			//   participation_points
 
-			let apply_partial_credit = {
-				"blank_lines": false,
-				"case": false,
-				"spaces": false
-			}
+			// console.log('Correct file content:');
+			// console.log(correct_file_content);
+			let submitted_file_content = f.content;
+			let correct_by_line = correct_file_content.split('\n');
+			let submitted_by_line = submitted_file_content.split('\n');
+
 
 			// Compare the two files line by line.
 			let offset = 0;
+			let match_by_line = [];
 			for (let i = 0; i < correct_by_line.length; i++) {
-				console.log('Comparing line ' + (i + 1));
+
+				// If one of the prohibited words is present, stop now. Zero credit.
+				for (const prohibited_word of options.cannot_have) {
+					if (submitted_by_line[i + offset].includes(prohibited_word)) {
+						console.log("Prohibited word found: " + prohibited_word);
+						this_file_credit = 0;
+						break;
+					}
+				}
+				// Make sure we have all the required words eventually.
+				for (const required_word in options.must_have) {
+					if (submitted_by_line[i + offset].includes(required_word)) {
+						missing_required_word[j] = false;
+					}
+				}
+
+
+				// console.log('Comparing line ' + (i + 1));
 				if (i + offset >= submitted_by_line.length) {
 					console.log('Ran out of lines in submitted file.');
 					break;
 				}
 				if (correct_by_line[i] === submitted_by_line[i + offset]) {
 					// Perfect match, everything's great.
-					console.log('Perfect match on line ' + (i + 1));
+					match_by_line.push(true);
 					continue;
 				} else {
 					// Imperfect match, check for partial credit.
@@ -238,7 +259,7 @@ async function compareFiles(all_file_content, options) {
 							console.log("Line " + (i + 1) + " is entirely different. Done comparing.");
 						}
 					} else {
-						console.log("Line " + (i + 1) + " matches except for whitespace at either end.");
+						console.log("Line " + (i + 1) + " matches except for whitespace at start or end.");
 						apply_partial_credit.spaces = true;
 						if (correct_by_line[i] === "" && submitted_by_line[i + offset] !== "") {
 							// The correct file has a blank line, but the submitted file does not.
@@ -256,6 +277,8 @@ async function compareFiles(all_file_content, options) {
 					}
 				}
 			}
+			console.log("Match by line for " + f.name + ":");
+			console.log(match_by_line);
 		}
 		for (const key in apply_partial_credit) {
 			if (apply_partial_credit[key]) {
@@ -263,17 +286,22 @@ async function compareFiles(all_file_content, options) {
 				this_file_credit *= options.credit_options[key];
 			}
 		}
+		if (missing_required_word.includes(true)) {
+			console.log("Missing required word(s) in " + f.name);
+			this_file_credit = 0;
+		}
 		current_credit += this_file_credit;
+		console.log("Credit for " + f.name + ": " + this_file_credit);
 	}
 	let credit = current_credit / max_credit;
-	console.log("Final credit: " + credit + "/" + max_credit);
+	console.log("Final credit: " + current_credit + "/" + max_credit);
 	// Send it back or save the state or whatever.
 }
 
 
 /** 
  * Pulls options from the HTML on the page.
- * These are declared in Python on edX and inserted into the HTML.
+ * On edX these are declared in Python and inserted into the HTML.
  */
 function getOptions() {
 	let options_div = document.querySelector('.hx-comparison-options');
@@ -284,9 +312,9 @@ function getOptions() {
 
 /** Puts basic info about the uploaded file into the info area. */
 function displayFileInfo(file_info) {
-  displayMessage('Name: ' + file_info.name, 'output-area', true);
-  // displayMessage('Type: ' + file_info.type, 'output-area', true);
-  // displayMessage('Size: ' + file_info.size + ' bytes', 'output-area', true);
+	displayMessage('Name: ' + file_info.name, 'output-area', true);
+	// displayMessage('Type: ' + file_info.type, 'output-area', true);
+	// displayMessage('Size: ' + file_info.size + ' bytes', 'output-area', true);
 }
 
 /**
@@ -296,13 +324,13 @@ function displayFileInfo(file_info) {
  * @param {boolean} append - Whether to append the message or replace existing content.
  */
 function displayMessage(message, area_id, append = false) {
-  let info_area = document.getElementById(area_id);
-  if (!append) {
-    info_area.innerHTML = ''; // Clear previous messages
-  }
-  let p = document.createElement('p');
-  p.textContent = message;
-  info_area.appendChild(p);
+	let info_area = document.getElementById(area_id);
+	if (!append) {
+		info_area.innerHTML = ''; // Clear previous messages
+	}
+	let p = document.createElement('p');
+	p.textContent = message;
+	info_area.appendChild(p);
 }
 
 /** Loads the file from the same folder this script is in. */
