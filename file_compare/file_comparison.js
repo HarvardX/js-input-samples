@@ -122,7 +122,7 @@ async function readFiles(files, options) {
 		await new Promise((resolve, reject) => {
 			reader.onload = (event) => {
 				const file_content = event.target.result;
-				console.log(f);
+				// console.log(f);
 				all_file_content[f.name] = {
 					"content": file_content,
 					"size": f.size,
@@ -136,14 +136,20 @@ async function readFiles(files, options) {
 			reader.readAsText(f);
 		});
 	}
-	await processFiles(all_file_content, options);
+  // console.log(all_file_content);
+  if (Object.keys(all_file_content).length !== options.correct_answers.length) {
+    console.error("Did not upload all files.");
+  } else{
+    await compareFiles(all_file_content, options);
+  }
 }
 
 /**
  * Compares file content uploaded by learners to the correct answers.
+ * Returns score and comments.
  * @param {*} all_file_content
  */
-async function processFiles(all_file_content, options) {
+async function compareFiles(all_file_content, options) {
 	for (const fileName in all_file_content) {
 		const f = all_file_content[fileName];
 		f.name = fileName;
@@ -252,12 +258,25 @@ function getOptions() {
 
 /** Puts basic info about the uploaded file into the info area. */
 function displayFileInfo(file_info) {
-	let info_area = document.getElementById('info-area');
+  displayMessage('Name: ' + file_info.name, 'output-area', true);
+  // displayMessage('Type: ' + file_info.type, 'output-area', true);
+  // displayMessage('Size: ' + file_info.size + ' bytes', 'output-area', true);
+}
 
-	let info_html = '<p>Name: ' + file_info.name + '</p>';
-	info_html += '<p>Type: ' + file_info.type + '</p>';
-	info_html += '<p>Size: ' + file_info.size + ' bytes</p>';
-	info_area.innerHTML += info_html;
+/**
+ * Displays a message in the specified area.
+ * @param {string} message - The message to display.
+ * @param {string} area_id - The ID where we're displaying - normally info or output
+ * @param {boolean} append - Whether to append the message or replace existing content.
+ */
+function displayMessage(message, area_id, append = false) {
+  let info_area = document.getElementById(area_id);
+  if (!append) {
+    info_area.innerHTML = ''; // Clear previous messages
+  }
+  let p = document.createElement('p');
+  p.textContent = message;
+  info_area.appendChild(p);
 }
 
 /** Loads the file from the same folder this script is in. */
