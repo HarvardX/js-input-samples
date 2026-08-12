@@ -117,6 +117,7 @@ var file_comparison = (function () {
  */
 async function readFiles(files, options) {
 	let all_file_content = {};
+	let answer_files = options.correct_answers.slice(); // Making a copy
 	for (const f of files) {
 		const reader = new FileReader();
 		await new Promise((resolve, reject) => {
@@ -144,9 +145,13 @@ async function readFiles(files, options) {
  * @param {*} all_file_content
  */
 async function processFiles(all_file_content, options) {
+	let max_credit = Object.keys(all_file_content).length;
+	let current_credit = 0;
+
 	for (const fileName in all_file_content) {
 		const f = all_file_content[fileName];
 		f.name = fileName;
+		let this_file_credit = 1;
 
 		if (
 			f.type.indexOf('text') === -1 &&
@@ -167,6 +172,21 @@ async function processFiles(all_file_content, options) {
 
 			// Go get the file to compare to.
 			let correct_file_content = await retrieveFile(f.name);
+
+			// Using hashes if you want to avoid revealing the correct answer
+			if (options.files_or_hashes === "hashes") {
+				// Hash the correct file content and the submitted file content.
+				let correct_file_hash = options.correct_answers[fileName];
+				let submitted_file_hash = await sha256(f.content);
+				if (correct_file_hash === submitted_file_hash) {
+					console.log('Hashes match for ' + f.name);
+					continue;
+				} else {
+					this_file_credit = 0;
+					continue;
+				}
+			}
+
 			// console.log('Correct file content:');
 			// console.log(correct_file_content);
 			let submitted_file_content = f.content;
@@ -174,14 +194,13 @@ async function processFiles(all_file_content, options) {
 			let submitted_by_line = submitted_file_content.split('\n');
 
 
-			// "credit_options": {
-			//   "blank_lines": 0.8,
-			//   "case": 0.6,
-			//   "spaces": 0.9,
-			//   "low_cutoff": 0.5,
-			//   "high_cutoff": 0.9,
-			//   "participation_points": 0.2
-			// }
+			// Keys for the `credit_options` object. All are Numbers.
+			//   blank_lines
+			//   case
+			//   spaces
+			//   low_cutoff
+			//   high_cutoff
+			//   participation_points
 
 			let apply_partial_credit = {
 				"blank_lines": false,
@@ -190,7 +209,6 @@ async function processFiles(all_file_content, options) {
 			}
 
 			// Compare the two files line by line.
-			let total_credit = 1;
 			let offset = 0;
 			for (let i = 0; i < correct_by_line.length; i++) {
 				console.log('Comparing line ' + (i + 1));
@@ -212,11 +230,9 @@ async function processFiles(all_file_content, options) {
 							apply_partial_credit.case = true;
 						} else {
 							console.log("Line " + (i + 1) + " is entirely different. Done comparing.");
-							total_credit = 0;
-							break;
 						}
 					} else {
-						console.log("Line " + i + "matches except for whitespace at either end.");
+						console.log("Line " + (i + 1) + " matches except for whitespace at either end.");
 						apply_partial_credit.spaces = true;
 						if (correct_by_line[i] === "" && submitted_by_line[i + offset] !== "") {
 							// The correct file has a blank line, but the submitted file does not.
@@ -235,7 +251,17 @@ async function processFiles(all_file_content, options) {
 				}
 			}
 		}
+		for (const key in apply_partial_credit) {
+			if (apply_partial_credit[key]) {
+				console.log("Partial credit applied for " + key);
+				this_file_credit *= options.credit_options[key];
+			}
+		}
+		current_credit += this_file_credit;
 	}
+	let credit = current_credit / max_credit;
+	console.log("Final credit: " + credit + "/" + max_credit);
+	// Send it back or save the state or whatever.
 }
 
 
