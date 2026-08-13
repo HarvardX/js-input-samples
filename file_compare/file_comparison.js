@@ -56,6 +56,7 @@ var file_comparison = (function () {
   // REQUIRED --- DO NOT REMOVE/CHANGE!!
   if (window.parent !== window) {
     channel = Channel.build({
+      //
       window: window.parent,
       origin: "*",
       scope: "JSInput",
@@ -107,7 +108,6 @@ var file_comparison = (function () {
  */
 async function readFiles(files, options) {
   let all_file_content = {};
-  let answer_files = options.correct_answers.slice(); // Making a copy
   for (const f of files) {
     const reader = new FileReader();
     await new Promise((resolve, reject) => {
@@ -144,7 +144,7 @@ async function readFiles(files, options) {
 async function compareFiles(all_file_content, options) {
   let max_credit = Object.keys(all_file_content).length;
   let current_credit = 0;
-  let missing_required_word = options.must_have.map((word) => true); // Start with all required words missing
+  let missing_required_word = options.must_have.map((x) => true); // Start with all required words missing
 
   for (const fileName in all_file_content) {
     const f = all_file_content[fileName];
@@ -157,15 +157,14 @@ async function compareFiles(all_file_content, options) {
     };
 
     if (
-      f.type.indexOf("text") === -1 &&
-      f.type.indexOf("json") === -1 &&
-      f.type.indexOf("javascript") === -1 &&
-      f.type.indexOf("python") === -1
+      !f.type.includes("text") &&
+      !f.type.includes("json") &&
+      !f.type.includes("javascript") &&
+      !f.type.includes("python")
     ) {
       // This is not a text file.
       let outputArea = document.querySelector("#output-area");
       outputArea.innerHTML += "<p>" + f.name + " is not a text file.</p>";
-      JSProblemState.uploadedRightThing = false;
       console.log(f.name);
       console.log(f.type);
     } else {
@@ -216,7 +215,8 @@ async function compareFiles(all_file_content, options) {
           }
         }
         // Make sure we have all the required words eventually.
-        for (const required_word in options.must_have) {
+        for (let j = 0; j < options.must_have.length; j++) {
+          const required_word = options.must_have[j];
           if (submitted_by_line[i + offset].includes(required_word)) {
             missing_required_word[j] = false;
           }
@@ -231,54 +231,53 @@ async function compareFiles(all_file_content, options) {
           // Perfect match, everything's great.
           match_by_line.push(true);
           continue;
-        } else {
-          // Imperfect match, check for partial credit.
-          let cl = correct_by_line[i].trim();
-          let sl = submitted_by_line[i + offset].trim();
-          if (cl !== sl) {
-            if (cl.toLowerCase() === sl.toLowerCase()) {
-              console.log("Line " + (i + 1) + " is the same except for case.");
-              apply_partial_credit.case = true;
-            } else {
-              console.log(
-                "Line " + (i + 1) + " is entirely different. Done comparing.",
-              );
-            }
+        }
+
+        // Imperfect match, check for partial credit.
+        let cl = correct_by_line[i].trim();
+        let sl = submitted_by_line[i + offset].trim();
+        if (cl !== sl) {
+          // Case checking
+          if (cl.toLowerCase() === sl.toLowerCase()) {
+            console.log("Line " + (i + 1) + " is the same except for case.");
+            apply_partial_credit.case = true;
           } else {
             console.log(
-              "Line " +
-                (i + 1) +
-                " matches except for whitespace at start or end.",
+              "Line " + (i + 1) + " is entirely different. Done comparing.",
             );
-            apply_partial_credit.spaces = true;
-            if (
-              correct_by_line[i] === "" &&
-              submitted_by_line[i + offset] !== ""
-            ) {
-              // The correct file has a blank line, but the submitted file does not.
-              // Hold back our count on the submitted file by one line.
-              console.log(
-                "Holding back one line at " +
-                  (i + 1) +
-                  " in the submitted file because the correct file has a blank line.",
-              );
-              apply_partial_credit.blank_lines = true;
-              offset--;
-            } else if (
-              correct_by_line[i] !== "" &&
-              submitted_by_line[i + offset] === ""
-            ) {
-              // The submitted file has a blank line, but the correct file does not.
-              // Move forward the line we're examining in the submitted file by one line.
-              console.log(
-                "Moving forward one line at " +
-                  (i + 1) +
-                  " in the submitted file because the submitted file has a blank line.",
-              );
-              apply_partial_credit.blank_lines = true;
-              offset++;
-            }
           }
+        } else {
+          // Whitespace checking
+          console.log(
+            "Line " +
+              (i + 1) +
+              " matches except for whitespace at start or end.",
+          );
+          apply_partial_credit.spaces = true;
+        }
+        if (correct_by_line[i] === "" && submitted_by_line[i + offset] !== "") {
+          // The correct file has a blank line, but the submitted file does not.
+          // Hold back our count on the submitted file by one line.
+          console.log(
+            "Holding back one line at " +
+              (i + 1) +
+              " in the submitted file because the correct file has a blank line.",
+          );
+          apply_partial_credit.blank_lines = true;
+          offset--;
+        } else if (
+          correct_by_line[i] !== "" &&
+          submitted_by_line[i + offset] === ""
+        ) {
+          // The submitted file has a blank line, but the correct file does not.
+          // Move forward the line we're examining in the submitted file by one line.
+          console.log(
+            "Moving forward one line at " +
+              (i + 1) +
+              " in the submitted file because the submitted file has a blank line.",
+          );
+          apply_partial_credit.blank_lines = true;
+          offset++;
         }
       }
       console.log("Match by line for " + f.name + ":");
