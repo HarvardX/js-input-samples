@@ -28,9 +28,9 @@ cannot_have = [
 ]
 
 options = {
-  files_or_hashes: "files",
-  filenames: correct_answers,
-  hashes: hash_dict,
+  "files_or_hashes": "files",
+  "filenames": filenames,
+  "hashes": hash_dict,
   "must_have": must_have,
   "cannot_have": cannot_have,
   "files_or_hashes": "files",   # alternative: "hashes"
@@ -50,7 +50,7 @@ options = {
 def answercheck(e, ans):
 
   response = json.loads(ans)
-  JSProblemState = json.loads(response["state"])
+  JSProblemState = json.loads(parsed['answer'])
 
   ok = "partial"
   if JSProblemState["final_credit"] == 1:

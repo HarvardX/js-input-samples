@@ -1,14 +1,19 @@
 "use strict";
-console.log("inner working");
+console.log("File Comparison problem ready");
 
 // If the student comes to this problem for the first time,
 // they start blank.
 var JSProblemState = {
   filenames: [],
-  messages: [],
+  message: "",
   credits: [],
   final_credit: 0,
 };
+
+// We only get one shot at this, the first time the problem loads.
+// *Should* it be available later? Yes. Is it? No.
+window.parent.hx_file_comparison_options = getOptions();
+console.log(window.parent.hx_file_comparison_options);
 
 // This wrapper function is necessary.
 // You can rename it if you want, just make sure the attributes
@@ -33,6 +38,10 @@ var file_comparison = (function () {
   // Called by edX to obtain the current learner state for this problem.
   function getState() {
     console.log("getting state");
+    // This string gets URI-decoded later, so percents need to be escaped.
+    // Assuming no percents in filenames or credit amounts (those are decimals).
+    JSProblemState.message = JSProblemState.message.replace(/%/g, "%25");
+    // Give edX our state as a string.
     return JSON.stringify(JSProblemState);
   }
 
@@ -40,18 +49,21 @@ var file_comparison = (function () {
   function setState() {
     console.log("setting state");
     // Make sure we're getting the right thing from edX.
-    stateStr = arguments.length === 1 ? arguments[0] : arguments[1];
+    let stateStr = arguments.length === 1 ? arguments[0] : arguments[1];
     // edX stores the state as stringified JSON. Parse it.
     JSProblemState = JSON.parse(stateStr);
+    JSProblemState.message = JSProblemState.message.replace(/%25/g, "%");
     // Set the live state to the stored state (the learner's previous answer).
-    let d = window.parent.document;
-    let concat_messages = JSProblemState.messages.join("<br>");
-    d.getElementById("hx-output-area").innerHTML = "";
+    displayMessage(JSProblemState.message, "hx-output-area", true);
   }
 
   // Called by edX when the learner submits the problem.
   function getGrade() {
     console.log("getting grade");
+    // The answer string gets URI-decoded later, so percents need to be escaped.
+    // Assuming no percents in filenames or credit amounts (those are decimals).
+    JSProblemState.message = JSProblemState.message.replace(/%/g, "%25");
+
     // Send the problem state to be graded.
     return JSON.stringify(JSProblemState);
   }
@@ -65,27 +77,20 @@ var file_comparison = (function () {
   };
 })();
 
-
 // Let's go.
 init("edx");
 
 /** Create the file drop area and set up listeners. No return value. */
 async function init(environment) {
-  let w = window.parent;
   let d = window.parent.document; // We do everything in the parent.
   let all_file_content = {};
+  let options = window.parent.hx_file_comparison_options;
 
-  // Options are set in the XML. 
-  // It does odd things with single/double quotes, thus the stringify/parse combo.
-  const options_holder = w.document.getElementById("hx-file-comparison-options");
-  let tc = options_holder.textContent.trim();
-  // Replace single quotes with double quotes and vice versa
-  tc = tc.replace(/'/g, '"');
-  let options = JSON.parse(tc)
-  console.log("Options:");
-  console.log(options);
-
-  displayMessage("Required files: " + options.filenames.join(", "), "hx-prompt-area", false);
+  displayMessage(
+    "Required files: " + options.filenames.join(", "),
+    "hx-prompt-area",
+    false,
+  );
 
   // Create a file-drop area for processing.
   const fileDropArea = d.getElementById("hx-file-drop-area");
@@ -121,6 +126,32 @@ async function init(environment) {
     });
     fileInput.click();
   });
+}
+
+/** Read off the options defined in the python part of the XML. */
+function getOptions() {
+  if (window.parent.hx_file_comparison_options) {
+    return window.parent.hx_file_comparison_options;
+  }
+  let d = window.parent.document; // We do everything in the parent.
+  let all_file_content = {};
+
+  // Options are set in the XML.
+  // It does odd things with single/double quotes, thus the stringify/parse combo.
+  const options_holder = d.getElementById("hx-file-comparison-options");
+  let tc = options_holder.textContent.trim();
+  if (typeof tc === "undefined" || tc === null || tc === "None" || tc === "") {
+    tc = "{}";
+  }
+  // Replace single quotes with double quotes and vice versa
+  // Sort of relying on Æ will not be in the string.
+  tc = tc.replace(/'/g, "Æ").replace(/"/g, "'").replace(/Æ/g, '"');
+  console.log(tc);
+  let options = JSON.parse(tc);
+  console.log("Options:");
+  console.log(options);
+
+  return options;
 }
 
 /**
@@ -166,10 +197,10 @@ async function compareFiles(all_file_content, options, environment) {
     console.error("Did not upload all files.");
     displayMessage(
       "You uploaded " +
-      Object.keys(all_file_content).length +
-      " out of " +
-      options.filenames.length +
-      " required files. Please upload the required files.",
+        Object.keys(all_file_content).length +
+        " out of " +
+        options.filenames.length +
+        " required files. Please upload the required files.",
       "hx-output-area",
       false,
     );
@@ -217,8 +248,9 @@ async function compareFiles(all_file_content, options, environment) {
       !f.type.includes("python")
     ) {
       // This is not a text file.
-      let outputArea = d.querySelector("#hx-output-area");
-      outputArea.innerHTML += "<p>" + f.name + " is of type " + f.type + ", not a text file.</p>";
+      let outputArea = window.parent.document.querySelector("#hx-output-area");
+      outputArea.innerHTML +=
+        "<p>" + f.name + " is of type " + f.type + ", not a text file.</p>";
     } else {
       // Yay it's a text file!
       displayMessage("Filename: " + f.name, "hx-output-area", true);
@@ -239,7 +271,10 @@ async function compareFiles(all_file_content, options, environment) {
           msg = "Hashes match for " + f.name + ".\n";
           missing_required_word = missing_required_word.map((x) => false); // All required words are present if the hash matches.
         } else {
-          msg = "Hashes do not match for " + f.name + ". No credit for this file.\n";
+          msg =
+            "Hashes do not match for " +
+            f.name +
+            ". No credit for this file.\n";
           this_file_credit = 0;
         }
         current_credit += this_file_credit;
@@ -273,7 +308,9 @@ async function compareFiles(all_file_content, options, environment) {
           if (submitted_file_by_line[i].includes(prohibited_word)) {
             console.log("Prohibited word found: " + prohibited_word);
             message +=
-              "Prohibited word found: " + prohibited_word + ". No credit for this file.\n";
+              "Prohibited word found: " +
+              prohibited_word +
+              ". No credit for this file.\n";
             this_file_credit = 0;
             break;
           }
@@ -326,22 +363,40 @@ async function compareFiles(all_file_content, options, environment) {
         }
 
         // Imperfect match, check for partial credit.
-        if (matchesWithoutCase(correct_file_by_line[i], submitted_file_by_line[i])) {
+        if (
+          matchesWithoutCase(correct_file_by_line[i], submitted_file_by_line[i])
+        ) {
           console.log("Line " + (i + 1) + " is the same except for case.");
           apply_partial_credit.case = true;
-        } else if (matchesWithoutWhitespace(correct_file_by_line[i], submitted_file_by_line[i])) {
-          console.log("Line " + (i + 1) + " matches except for whitespace at start or end.");
-          apply_partial_credit.spaces = true;
         } else if (
-          matchesWithoutCaseAndWhitespace(correct_file_by_line[i], submitted_file_by_line[i])
+          matchesWithoutWhitespace(
+            correct_file_by_line[i],
+            submitted_file_by_line[i],
+          )
         ) {
           console.log(
-            "Line " + (i + 1) + " matches except for case and whitespace at start or end.",
+            "Line " +
+              (i + 1) +
+              " matches except for whitespace at start or end.",
+          );
+          apply_partial_credit.spaces = true;
+        } else if (
+          matchesWithoutCaseAndWhitespace(
+            correct_file_by_line[i],
+            submitted_file_by_line[i],
+          )
+        ) {
+          console.log(
+            "Line " +
+              (i + 1) +
+              " matches except for case and whitespace at start or end.",
           );
           apply_partial_credit.case = true;
           apply_partial_credit.spaces = true;
         } else {
-          console.log("Line " + (i + 1) + " is entirely different. Done comparing.");
+          console.log(
+            "Line " + (i + 1) + " is entirely different. Done comparing.",
+          );
           message +=
             "Line " +
             (i + 1) +
@@ -365,7 +420,9 @@ async function compareFiles(all_file_content, options, environment) {
 
     // If we're not applying any partial credit, this is a perfect match.
     // Otherwise, explain why.
-    let applying_partial_credit = Object.values(apply_partial_credit).some((x) => x === true);
+    let applying_partial_credit = Object.values(apply_partial_credit).some(
+      (x) => x === true,
+    );
     if (!applying_partial_credit && this_file_credit === 1) {
       message += "Perfect match for " + f.name + ".\n";
     } else {
@@ -379,9 +436,10 @@ async function compareFiles(all_file_content, options, environment) {
 
     this_file_credit = Math.round(this_file_credit * 100) / 100; // Round to two decimal places
     current_credit += this_file_credit;
-    console.log("Credit for " + f.name + ": " + decimalToPercentage(this_file_credit));
+    console.log(
+      "Credit for " + f.name + ": " + decimalToPercentage(this_file_credit),
+    );
     JSProblemState.filenames.push(f.name);
-    JSProblemState.messages.push(message);
     JSProblemState.credits.push(this_file_credit);
   }
 
@@ -420,6 +478,7 @@ async function compareFiles(all_file_content, options, environment) {
   console.log("Final credit: " + decimalToPercentage(credit));
   message += "Final credit: " + decimalToPercentage(credit) + "\n";
   JSProblemState.final_credit = credit;
+  JSProblemState.message = message;
   displayMessage(message, "hx-output-area", true);
   // Send it back or save the state or whatever.
 }
@@ -465,7 +524,10 @@ function partialCreditMessage(options, apply_partial_credit) {
       decimalToPercentage(options.credit_options.case) +
       "\n";
   }
-  if (options.credit_options.blank_lines < 1 && apply_partial_credit.blank_lines) {
+  if (
+    options.credit_options.blank_lines < 1 &&
+    apply_partial_credit.blank_lines
+  ) {
     message +=
       "Partial credit for extra blank lines: x" +
       decimalToPercentage(options.credit_options.blank_lines) +
@@ -519,7 +581,9 @@ async function retrieveFile(file_name, folder_name, environment) {
     // Assume localhost or other environment
     file_url = window.location.origin + "/" + folder_name + "/" + file_name;
   }
-  const file_content = await fetch(file_url).then((response) => response.text());
+  const file_content = await fetch(file_url).then((response) =>
+    response.text(),
+  );
   return file_content;
 }
 
@@ -556,7 +620,11 @@ function getEdxFileURL(filename) {
   }
 
   let staticFileURL =
-    "https://courses.edx.org/" + "asset" + courseIdentifier + "+type@asset+block/" + filename;
+    "https://courses.edx.org/" +
+    "asset" +
+    courseIdentifier +
+    "+type@asset+block/" +
+    filename;
 
   return staticFileURL;
 }
@@ -576,4 +644,3 @@ async function sha256(source) {
   console.log("SHA256 hash: " + hash);
   return hash;
 }
-
