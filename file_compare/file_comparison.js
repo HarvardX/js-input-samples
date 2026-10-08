@@ -226,7 +226,7 @@ async function compareFiles(all_file_content, options, environment) {
       // Go get the file to compare to.
       let correct_file_content = await retrieveFile(
         f.name,
-        options.test_file_source,
+        options.test_file_source || "",
         environment,
       );
 
@@ -482,7 +482,7 @@ function partialCreditMessage(options, apply_partial_credit) {
  * @param {Boolean} append - Whether to append the message or replace existing content.
  */
 function displayMessage(message, area_id, append = false) {
-  let info_area = document.getElementById(area_id);
+  let info_area = window.parent.document.getElementById(area_id);
   if (!append) {
     info_area.innerHTML = ""; // Clear previous messages
   }
@@ -507,7 +507,6 @@ function decimalToPercentage(decimal, n = 0) {
  * Loads the file from the listed folder. Folder can be a fully qualified URL.
  *
  * @param {String} file_name - The name of the file to retrieve.
- * @param {String} folder_name - The name of the folder where the file is located (on localhost only)
  * @param {String} environment - The environment (edx in this iteration) because they all work differently.
  * @returns {Promise<string>} The content of the file as a string.
  */
