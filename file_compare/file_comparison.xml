@@ -9,7 +9,8 @@ filenames = [
   "filename_3"
 ]
 
-hashes [
+# Hashes are unnecessary if comparing whole files.
+hashes = [
   "hash_1",
   "hash_2",
   "hash_3"
@@ -17,13 +18,13 @@ hashes [
 hash_dict = dict(zip(filenames, hashes))
 
 must_have = [
-  "code_thing_1",
-  "code_thing_2"
+  "term_1",
+  "term_2"
 ]
 
 cannot_have = [
-  "code_thing_3",
-  "code_thing_4"
+  "term_3",
+  "term_4"
 ]
 
 options = {
@@ -68,7 +69,6 @@ def answercheck(e, ans):
       }
     ]
   }
-  
 
 ]]>
 </script>
