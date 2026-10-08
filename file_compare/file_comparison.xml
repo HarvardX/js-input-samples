@@ -1,45 +1,74 @@
 <problem>
-<script type="loncapa/python">
+  <script type="loncapa/python">
 <![CDATA[
+import json
 
-from python_lib import HXGraders
+filenames = [
+  "filename_1",
+  "filename_2",
+  "filename_3"
+]
 
+hashes [
+  "hash_1",
+  "hash_2",
+  "hash_3"
+]
+hash_dict = dict(zip(filenames, hashes))
+
+must_have = [
+  "code_thing_1",
+  "code_thing_2"
+]
+
+cannot_have = [
+  "code_thing_3",
+  "code_thing_4"
+]
+
+options = {
+  files_or_hashes: "files",
+  filenames: correct_answers,
+  hashes: hash_dict,
+  "must_have": must_have,
+  "cannot_have": cannot_have,
+  "files_or_hashes": "files",   # alternative: "hashes"
+  "credit_options": {
+    "blank_lines": 0.8,
+    "case": 0.6,
+    "spaces": 0.9,
+    "low_cutoff": 0.5,
+    "high_cutoff": 0.9,
+    "participation_points": 0.2
+  }
+}
+
+# In this problem type we're using javascript to grade.
+# This is not standard, so I wanted to point it out here.
+# It potentially reveals correct answers to tech-savvy learners.
 def answercheck(e, ans):
 
-  correct_answers = [
-    "hash_or_filename_1",
-    "hash_or_filename_2",
-    "hash_or_filename_3"
-  ]
+  response = json.loads(ans)
+  JSProblemState = json.loads(response["state"])
 
-  must_have = [
-    "code_thing_1",
-    "code_thing_2"
-  ]
+  ok = "partial"
+  if JSProblemState["final_credit"] == 1:
+    ok = True
+  elif JSProblemState["final_credit"] == 0:
+    ok = False
 
-  cannot_have = [
-    "code_thing_3",
-    "code_thing_4"
-  ]
-
-  options = {
-    "correct_answers": correct_answers,
-    "must_have": must_have,
-    "cannot_have": cannot_have,
-    "files_or_hashes": "files",   # alternative: "hashes"
-    "credit_options": {
-      "blank_lines": 0.8,
-      "case": 0.6,
-      "encoding": 1,
-      "spaces": 0.9,
-      "low_cutoff": 0.5,
-      "high_cutoff": 0.9,
-      "participation_points": 0.2
-    }
+  rounded_grade = round(JSProblemState["final_credit"], 2)
+  
+  return {
+    "input_list": [
+      {
+        "ok": ok,
+        "msg": "",
+        "grade_decimal": rounded_grade,
+      }
+    ]
   }
-
-  # This pulls from the python_lib.zip file in Files & Uploads.
-  return HXGraders.fileComparisonGrader(ans, correct_answers, options)
+  
 
 ]]>
 </script>
@@ -56,10 +85,38 @@ function logThatThing(ThatThing){
 }
 </script>
 
+<style type="text/css">
+    #hx-file-drop-area {
+      width: 50%;
+      height: 150px;
+      font-size: 1.125rem;
+
+      margin: 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 3px 2px 10px rgba(0, 0, 0, 0.5) inset;
+      padding: 15px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hx-drop-area.dragover {
+      border-color: #000;
+    }
+  </style>
+
   <p>Put your prompt here</p>
 
-  <!-- This will get turned into a rich text editor by hx-js. -->
-  <!-- Change the ID here and above if you have multiple on the same screen. -->
+  <div id="hx-file-comparison-drop">
+    <div id="hx-prompt-area"></div>
+    <button id="hx-file-drop-area" class="hx-drop-area">
+      Drop files here or click to select files
+    </button>
+    <div id="hx-info-area"></div>
+    <div id="hx-output-area"></div>
+  </div>
 
   <customresponse cfn="answercheck">
     <jsinput
@@ -70,12 +127,15 @@ function logThatThing(ThatThing){
       width="100%"
       height="100px"
       html_file="/static/file_comparison.html"
-      sop="false"/>
+      sop="false" />
   </customresponse>
+  
   <!-- Quietly stores options on the page so javascript can read them. -->
-  <div class="hx-comparison-options" style="width:1px; height:1px; overflow:hidden;" aria-hidden="true">
+  <div id="hx-file-comparison-options" style="width:1px; height:1px; overflow:hidden;"
+    aria-hidden="true">
     $options
   </div>
+
   <solution>
     <div class="detailed-solution">
       <p>Explanation</p>
