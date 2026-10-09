@@ -197,10 +197,10 @@ async function compareFiles(all_file_content, options, environment) {
     console.error("Did not upload all files.");
     displayMessage(
       "You uploaded " +
-        Object.keys(all_file_content).length +
-        " out of " +
-        options.filenames.length +
-        " required files. Please upload the required files.",
+      Object.keys(all_file_content).length +
+      " out of " +
+      options.filenames.length +
+      " required files. Please upload the required files.",
       "hx-output-area",
       false,
     );
@@ -376,8 +376,8 @@ async function compareFiles(all_file_content, options, environment) {
         ) {
           console.log(
             "Line " +
-              (i + 1) +
-              " matches except for whitespace at start or end.",
+            (i + 1) +
+            " matches except for whitespace at start or end.",
           );
           apply_partial_credit.spaces = true;
         } else if (
@@ -388,8 +388,8 @@ async function compareFiles(all_file_content, options, environment) {
         ) {
           console.log(
             "Line " +
-              (i + 1) +
-              " matches except for case and whitespace at start or end.",
+            (i + 1) +
+            " matches except for case and whitespace at start or end.",
           );
           apply_partial_credit.case = true;
           apply_partial_credit.spaces = true;
@@ -415,6 +415,7 @@ async function compareFiles(all_file_content, options, environment) {
     }
     if (missing_required_word.includes(true)) {
       console.log("Missing required word(s) in " + f.name);
+      message += "Missing required word(s) in " + f.name + ". No credit for this file.\n";
       this_file_credit = 0;
     }
 
@@ -457,7 +458,7 @@ async function compareFiles(all_file_content, options, environment) {
     message += msg;
     console.log(msg);
   }
-  if (credit + options.credit_options.participation_points <= 1) {
+  if (credit + options.credit_options.participation_points <= 1 && options.credit_options.participation_points > 0) {
     credit += options.credit_options.participation_points;
     msg =
       "Adding participation points: +" +
